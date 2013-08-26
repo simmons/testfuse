@@ -1,0 +1,54 @@
+
+testfuse - a FUSE filesystem driver for presenting deterministic
+           pseudo-random files of various sizes.
+========================================================================
+
+(c) 2013 David Simmons
+Licensed under the Apache License, Version 2.0
+
+This program presents a filesystem containing files of various sizes
+composed of deterministic, but pseudorandom data.  The goal is to
+provide test files for various network speed testing, without being
+bottlenecked by the I/O overhead of hard drives, SSDs, or traditional
+filesystem drivers.  Tests show that testfuse can deliver file data
+at about 7 Gbps on a circa-2009 Core i7 machine.
+
+The contents of these files are 100% deterministic -- two instances
+of testfuse with the same parameters running on different machines
+should result in identical filesystems.  This could be useful, for
+instance, when staging a BitTorrent swarm.
+
+Usage:
+    ./testfuse <file-spec-list> -f <mount-point>
+
+Example:
+    $ ./testfuse testfile_1M,1M,1/testfile_1G,1G,0x02 -f /mnt/testfuse
+    $ sha1sum /mnt/testfuse/testfile_1M
+    1625df500068aa8b85370ba8d488fd4233d59ec1  /mnt/testfuse/testfile_1M
+    $ sha1sum /mnt/testfuse/testfile_1M
+    1625df500068aa8b85370ba8d488fd4233d59ec1  /mnt/testfuse/testfile_1M
+    $ sha1sum /mnt/testfuse/testfile_1G
+    d4c8ecd333785fcae74d11747d8e32bf066500b0  /mnt/testfuse/testfile_1G
+    $ sha1sum /mnt/testfuse/testfile_1G
+    d4c8ecd333785fcae74d11747d8e32bf066500b0  /mnt/testfuse/testfile_1G
+    $ dd if=/mnt/testfuse/testfile_1G > /dev/null
+    2097152+0 records in
+    2097152+0 records out
+    1073741824 bytes (1.1 GB) copied, 1.2609 s, 852 MB/s
+
+The file-spec-list argument is a slash-delimited list of file
+specifications, each of which is a comma-delimited tuple indicating
+the file name, the file size, and a 32-bit seed value.  Files of the
+same size and seed value will always be identical.
+
+Building testfuse
+----------------------------------------
+
+You must have the FUSE development library installed to compile this
+program.  In Ubuntu, you can install this library with the following
+command:
+
+sudo apt-get install libfuse-dev
+
+Then, simply run "make".
+
